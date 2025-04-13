@@ -72,16 +72,29 @@ function updateElementsWithFormattedText(dataMap) {
 
 // Play audio for the word using Google Translate TTS
 function playWordAudio(word) {
-	const audio = new Audio(
-		`https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&q=${encodeURIComponent(
-			word
-		)}&tl=en`
-	);
-	audio.volume = 0.4; // Set volume to 40%
-	audio.onerror = () => {
-		console.log("Failed to play audio. Google TTS may be blocked.");
-	};
-	audio.play();
+    fetchWordData(word).then((wordData) => {
+        if (wordData && wordData.audio) {
+            // Construct the Merriam-Webster audio URL
+            const subdirectory = wordData.audio.startsWith("bix")
+                ? "bix"
+                : wordData.audio.startsWith("gg")
+                ? "gg"
+                : /^[0-9]/.test(wordData.audio.charAt(0))
+                ? "number"
+                : wordData.audio.charAt(0);
+            const audioUrl = `https://media.merriam-webster.com/audio/prons/en/us/mp3/${subdirectory}/${wordData.audio}.mp3`;
+
+            // Play the audio
+            const audio = new Audio(audioUrl);
+            audio.volume = 0.4; // Set volume to 40%
+            audio.onerror = () => {
+                console.log("Failed to play audio. Merriam-Webster audio may be unavailable.");
+            };
+            audio.play();
+        } else {
+            alert("Audio not available for this word.");
+        }
+    });
 }
 
 // Initialize app
